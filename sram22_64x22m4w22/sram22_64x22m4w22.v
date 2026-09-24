@@ -5,24 +5,27 @@
 
 module sram22_64x22m4w22(
 `ifdef USE_POWER_PINS
-    vdd,
-    vss,
+  vdd,
+  vss,
 `endif
-    clk,rstb,ce,we,addr,din,dout
-  );
+  clk,rstb,ce,we,wmask,addr,din,dout
+);
 
   localparam DATA_WIDTH = 22;
   localparam ADDR_WIDTH = 6;
+  localparam WMASK_WIDTH = 1;
   localparam RAM_DEPTH = 1 << ADDR_WIDTH;
 
 `ifdef USE_POWER_PINS
-    inout vdd; // power
-    inout vss; // ground
+  inout vdd; // power
+  inout vss; // ground
 `endif
   input  clk; // clock
   input  rstb; // reset bar (active low reset)
   input  ce; // chip enable
   input  we; // write enable
+  input wmask; // whole-word write enable
+  
   input [ADDR_WIDTH-1:0]  addr; // address
   input [DATA_WIDTH-1:0]  din; // data in
   output reg [DATA_WIDTH-1:0] dout; // data out
@@ -34,7 +37,9 @@ module sram22_64x22m4w22(
     if (ce && rstb) begin
       // Write
       if (we) begin
-          mem[addr] <= din;
+          if (wmask) begin
+            mem[addr][21:0] <= din[21:0];
+          end
       end
 
       // Read
@@ -45,4 +50,3 @@ module sram22_64x22m4w22(
   end
 
 endmodule
-
